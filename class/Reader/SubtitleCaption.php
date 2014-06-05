@@ -1,10 +1,10 @@
 <?php
-namespace cd;
+namespace Reader;
 
 class SubtitleCaption
 {
     var $seq;           ///< sequence number
-    var $time;          ///< start time in second precision
+    var $startTime;     ///< start time in second precision
     var $duration;      ///< duration in second precision
     var $text = array();
 }

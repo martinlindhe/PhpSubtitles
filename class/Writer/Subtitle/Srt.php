@@ -12,9 +12,9 @@ class SubtitleWriterSrt extends \Writer\Subtitle
         foreach ($sub->caps as $cap) {
             $res .=
             ++$seq.$lf.
-            seconds_to_hms($cap->time, true, 3, ',', true).
+            seconds_to_hms($cap->startTime, true, 3, ',', true).
             ' --> '.
-            seconds_to_hms($cap->time + $cap->duration, true, 3, ',', true).$lf.
+            seconds_to_hms($cap->startTime + $cap->duration, true, 3, ',', true).$lf.
             implode($lf, $cap->text).$lf.
             $lf;
         }

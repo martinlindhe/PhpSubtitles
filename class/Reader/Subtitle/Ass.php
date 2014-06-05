@@ -72,8 +72,8 @@ class Ass extends \Reader\Subtitle
 
                 $cap = new SubtitleCaption();
                 $cap->seq      = ++$seq;
-                $cap->time     = in_seconds($piece[1]);
-                $cap->duration = in_seconds($piece[2]) - $cap->time;
+                $cap->startTime     = in_seconds($piece[1]);
+                $cap->duration = in_seconds($piece[2]) - $cap->startTime;
 
                 $txt = explode('\N', $piece[9]);  // split multi-line text
 

@@ -1,72 +1,97 @@
 <?php
 namespace Client;
 
-//TODO: SearchSubtitles api allows multiple video id:s!!  
-//      but test at 2011-07-12 seems its not working (no result returned)
-//    XXX see ticket: http://trac.opensubtitles.org/projects/opensubtitles/ticket/25
-
+//TODO: SearchSubtitles api allows multiple video ids
+//
 //TODO: DownloadSubtitles api allows multiple video id:s, so rework into
 //      multi-requesting for several videos at once
 //TODO: download sub for all wanted languages if they exists
 //TODO: how long do session token last?
 
-require_once('TempStore.php');
-//require_once('input_gzip.php');
-require_once('XmlRpcClient.php');
-require_once('HashVideo.php');
+//require_once('HashVideo.php');
 
 class SubQueryItem
 {
-    var $filename;
-    var $hash;
+    var $fileName;
+	var $fileSize;
+	var $hash;
 }
 
 /**
  * Downloads subtitles from opensubtitles.org API
  *
- * Documentation:
  * http://trac.opensubtitles.org/projects/opensubtitles/wiki/XmlRpcIntro
  */
-class OpenSubtitles extends XmlRpcClient
+class OpenSubtitles
 {
-    protected $userAgent = 'core_dev 1.0';
+//    protected $userAgent = 'core_dev 1.0';
 
-    private   $token      = ''; //auth token, set after a successful login() call
-    protected   $username, $password;
-    private   $languages  = array('eng');
+	protected $apiUrl = 'http://api.opensubtitles.org/xml-rpc';
+    protected $apiToken = null;
+    protected $languages = array('eng');
 
-    function __construct($username = '', $password = '')
-    {
-        parent::__construct();
-
-        $this->setUrl('http://api.opensubtitles.org/xml-rpc');
-        $this->username = $username;
-        $this->password = $password;
-
-        $this->setConnectionTimeout(60*5); //5 min timeout, server is slow sometimes
+    function __construct()
+    {		
+		if (!extension_loaded('xmlrpc')) {
+            throw new \Exception ('php5-xmlrpc not found');
+		}
     }
+	
+	/**
+	 * @param string $method
+	 * @param array $params
+	 */
+    private function call($method, $params)
+    {
+        $opts = array(
+        'output_type' => 'xml',
+        'verbosity'   => 'no_white_space',
+        'escaping'    => 'non-ascii',
+        'version'     => 'xmlrpc',
+        'encoding'    => 'UTF-8',
+        );
+        $request = xmlrpc_encode_request($method, $params, $opts);
 
+		echo "ENCODED REQUEST: ".$request."\n";
+		
+		$header = array(
+			'Content-Type: text/xml',
+			'Content-Length: '.strlen($request)
+		);
+
+		$ch = curl_init();   
+		curl_setopt($ch, CURLOPT_URL, $this->apiUrl);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+
+		$data = curl_exec($ch);       
+		if (curl_errno($ch)) {
+			throw new \Exception('curl error: '.curl_error($ch));
+		}
+
+		curl_close($ch);
+		return xmlrpc_decode($data);
+    }
+	
     /**
      * Logs in the user. Required before other API calls. anonymous logins are allowed
      */
-    private function login()
+    private function login(\Client\OpenSubtitlesConfig $config)
     {
-        if ($this->token)
+        if ($this->apiToken) {
             return true; // already logged in
-
-        $temp = TempStore::getInstance();
-        $key = 'opensubtitles/token';
-
-        $token = $temp->get($key);
-        if ($token) {
-//            echo "CACHE: REUSING LOGIN TOKEN ".$token."\n";
-            $this->token = $token;
-            return true;
-        }
+		}
 
         $res = $this->call(
             'LogIn',
-            array($this->username, $this->password, $this->languages[0], $this->userAgent)
+            array(
+				$config->username,
+				$config->password,
+				$config->language,
+				$config->userAgent,
+			)
         );
 
         if ($res['status'] != '200 OK') {
@@ -74,26 +99,44 @@ class OpenSubtitles extends XmlRpcClient
             throw new \Exception('Login failed');
         }
 
-        $this->token = $res['token'];
-        $temp->set($key, $this->token, '20m');
-
+        $this->apiToken = $res['token'];
         return true;
     }
 
     private function logout()
     {
-        if (!$this->token)
+        if (!$this->apiToken)
             return false;
 
-        $res = $this->call('LogOut', array($this->token));
+        $res = $this->call('LogOut', array($this->apiToken));
         if ($res['status'] != '200 OK')
             throw new \Exception('Logout failed');
+		
+		$this->apiToken = null;
 
         return true;
     }
 
+/*
+    function fetchAll($items)
+    {
+//        throw new \Exception ('querying multiple files at once seems to be broken, 2011-07-12');
 
-    function createQueryItem($file)
+        if (empty($items))
+            throw new \Exception('no input');
+
+        if (!$this->apiToken)
+            $this->login();
+
+        $query = $this->buildQuery($items);
+
+d($query);
+        $res = $this->call('SearchSubtitles', $query, true);
+d($res);
+    }
+*/
+	
+    private function createQueryItem($file)
     {
         if (!file_exists($file))
             throw new \Exception('file not found '.$file);
@@ -105,53 +148,27 @@ class OpenSubtitles extends XmlRpcClient
         return $i;
     }
 
-    function fetchAll($items)
+	/**
+	 * Returns all matches to a file name
+	 */
+    public function findAllMatches($videoFile)
     {
-//        throw new \Exception ('querying multiple files at once seems to be broken, 2011-07-12');
-
-        if (empty($items))
-            throw new \Exception('no input');
-
-        if (!$this->token)
-            $this->login();
-
-        $query = $this->buildQuery($items);
-
-d($query);
-        $res = $this->call('SearchSubtitles', $query, true);
-d($res);
-    }
-
-    private function buildQuery($items)
-    {
-        $query = array();
-
-        foreach ($items as $item) {
-            $size = filesize($item->filename);
-            $query[] = array('sublanguageid' => $this->languages[0], 'moviehash' => $item->hash, 'moviebytesize' => $size); //, 'imdbid' => $imdbid );
-        }
-
-        return array($this->token, $query) ;
-    }
-
-    function fetch($vidFile)
-    {
-        $id = $this->SearchByFile($vidFile);
+        $id = $this->SearchByFile($videoFile);
         if (!$id) {
             echo "ERROR: no match\n";
             return false;
         }
 
         $data = $this->DownloadSubtitles(array($id));
-
+		return $data;
+/*
         if (is_subtitle_srt($data))
-            $subFile = file_set_suffix($vidFile, '.srt');
+            $subFile = file_set_suffix($videoFile, '.srt');
         else if (is_subtitle_ass($data))
-            $subFile = file_set_suffix($vidFile, '.ass');
+            $subFile = file_set_suffix($videoFile, '.ass');
         else {
-            //throw new \Exception ('eeh what format');
-            echo "XXX: unrecognized format: ".substr($data, 0, 30)." ...\n";
-            $subFile = file_set_suffix($vidFile, '.sub'); //XXX: generic extension for unknown sub format
+            throw new \Exception('XXX: unrecognized format: '.substr($data, 0, 30).'...');
+            $subFile = file_set_suffix($videoFile, '.sub'); //XXX: generic extension for unknown sub format
             file_put_contents($subFile, $data);
 
             echo "[saved] ".basename($subFile)."\n";
@@ -170,19 +187,13 @@ d($res);
         echo "[saved] ".basename($subFile)."\n";
 
         return true;
+ */
     }
 
     //XXX extend function to return all subs that was queried
     private function DownloadSubtitles( $arr = array() )
-    {
-        $temp = TempStore::getInstance();
-        $key = 'SubtitleFetcher/subs/'.json_encode($arr);
-
-        $data = $temp->get($key);
-        if ($data)
-            return $data;
-
-        $res = $this->call('DownloadSubtitles', array($this->token, $arr));
+    {		 
+        $res = $this->call('DownloadSubtitles', array($this->apiToken, $arr));
         if ($res['status'] != '200 OK') {
             d($res);
             throw new \Exception('DownloadSubtitles fail 1');
@@ -195,46 +206,44 @@ d($res);
         if (!$data)
             throw new \Exception('DownloadSubtitles fail 2');
 
-        $temp->set($key, $data);
-
         return $data;
     }
 
     /**
      * @return IDSubtitleFile of best match, or false
      */
-    private function SearchByFile($filename)
+    public function SearchByFileHash(\Client\OpenSubtitlesConfig $config, $fileName)
     {
-        if (!$this->token)
-            $this->login();
+		$this->login($config);
+		
+		$fileHash = \Reader\VideoHash::calculateFromFile($fileName);
+		$fileSize = filesize($fileName);
 
-        $item = new SubQueryItem();
-        $item->hash = HashVideo::CalcFile($filename);
-        $item->filename = $filename;
-
-        $query = $this->buildQuery(array($item));
-
-        $temp = TempStore::getInstance();
-        $key = 'SubtitleFetcher/'.json_encode($query);
-
-        $bestId = $temp->get($key);
-        if ($bestId)
-            return $bestId;
+        $query = array(
+			$this->apiToken,
+			array(
+				'sublanguageid' => $config->language,
+				'moviehash' => $fileHash,
+				'moviebytesize' => $fileSize,
+				//'imdbid' => $imdbid
+			)
+		);
 
         $res = $this->call('SearchSubtitles', $query);
 
         if (!$res) {
-            // try again!!!
-            $res = $this->call('SearchSubtitles', $query);
-
-            if (!$res)
-                throw new \Exception('data error!');
+			throw new \Exception('data error - empty result 1');
         }
 
-        if (!$res['data'])
-            return false;
-
+        if (!$res['data']) {
+            throw new \Exception('data error - empty result 2');
+		}
+		
+		return $res;
+/*
         $base = file_set_suffix(basename($filename), '');
+		
+		
 
 // d($res);
 
@@ -296,8 +305,7 @@ d($res);
 
         echo "[selected] http://www.opensubtitles.org/en/download/file/".$bestId.".gz (score ".$bestScore.", of ".count($res['data'])." matches)\n";
 
-        $temp->set($key, $bestId);
-
         return $bestId;
+ */
     }
 }

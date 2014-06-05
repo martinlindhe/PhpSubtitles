@@ -18,7 +18,7 @@ $files = expand_arg_files($argv[1], array('*.avi', '*.mkv', '*.mp4'));
 
 print_r($files);
 
-$fetcher = new SubtitleFetcher();
+$fetcher = new \Client\OpenSubtitles();
 
 
 $items = array();

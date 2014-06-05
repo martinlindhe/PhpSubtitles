@@ -32,9 +32,9 @@ class Ass extends \Writer\Subtitle
         foreach ($sub->caps as $cap) {
             $res .=
             'Dialogue: 0,'.
-            seconds_to_hms($cap->time, true).
+            seconds_to_hms($cap->startTime, true).
             ','.
-            seconds_to_hms($cap->time + $cap->duration, true).
+            seconds_to_hms($cap->startTime + $cap->duration, true).
             ',Default,,0000,0000,0000,,'.
             implode('\N', $cap->text).$lf;
         }
