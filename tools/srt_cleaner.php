@@ -10,12 +10,12 @@ require_once('config.php');
 if (count($argv) < 2)
     die("Usage: ".$argv[0]." path or filename\n");
 
-$in_cmd = $argv[1];
+$inCmd = $argv[1];
 
 $backup = false; // perform backup?
 
 
-$files = expand_arg_files($in_cmd, array('*.srt', '*.ass'));
+$files = expand_arg_files($inCmd, array('*.srt', '*.ass'));
 // d($files);
 
 foreach ($files as $f) {
@@ -28,9 +28,9 @@ foreach ($files as $f) {
 
         if ($backup) {
             //backup orginal file
-            $backup_file = file_set_suffix($f, '.srt.org');
-            echo "Backed up orginal file as ".$backup_file."\n";
-            rename($f, $backup_file);
+            $backupFile = file_set_suffix($f, '.srt.org');
+            echo "Backed up orginal file as ".$backupFile."\n";
+            rename($f, $backupFile);
         }
 
         $cleaner->write($f);

@@ -11,32 +11,32 @@ class VideoHash
     {
         if (!file_exists($file)) {
             throw new \FileNotFoundException();
-		}
+        }
 
         $fsize = filesize($file);
         if ($fsize < 65536) {
             throw new \Exception('file too small');
-		}
+        }
 
         $handle = fopen($file, 'rb');
 
         $hash = array(
-			3 => 0,
-			2 => 0,
-			1 => ($fsize >> 16) & 0xFFFF,
-			0 => $fsize & 0xFFFF
-		);
+            3 => 0,
+            2 => 0,
+            1 => ($fsize >> 16) & 0xFFFF,
+            0 => $fsize & 0xFFFF
+        );
 
         for ($i = 0; $i < 8192; $i++) {
             $hash = self::addUint64($hash, $handle);
-		}
+        }
 
         $offset = $fsize - 65536;
         fseek($handle, $offset > 0 ? $offset : 0, SEEK_SET);
 
         for ($i = 0; $i < 8192; $i++) {
             $hash = self::addUint64($hash, $handle);
-		}
+        }
 
         fclose($handle);
 

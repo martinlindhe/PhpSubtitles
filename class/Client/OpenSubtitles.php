@@ -13,8 +13,8 @@ namespace Client;
 class SubQueryItem
 {
     var $fileName;
-	var $fileSize;
-	var $hash;
+    var $fileSize;
+    var $hash;
 }
 
 /**
@@ -26,21 +26,21 @@ class OpenSubtitles
 {
 //    protected $userAgent = 'core_dev 1.0';
 
-	protected $apiUrl = 'http://api.opensubtitles.org/xml-rpc';
+    protected $apiUrl = 'http://api.opensubtitles.org/xml-rpc';
     protected $apiToken = null;
     protected $languages = array('eng');
 
     function __construct()
-    {		
-		if (!extension_loaded('xmlrpc')) {
-            throw new \Exception ('php5-xmlrpc not found');
-		}
+    {
+        if (!extension_loaded('xmlrpc')) {
+            throw new \Exception('php5-xmlrpc not found');
+        }
     }
-	
-	/**
-	 * @param string $method
-	 * @param array $params
-	 */
+
+    /**
+     * @param string $method
+     * @param array $params
+     */
     private function call($method, $params)
     {
         $opts = array(
@@ -52,29 +52,29 @@ class OpenSubtitles
         );
         $request = xmlrpc_encode_request($method, $params, $opts);
 
-		echo "ENCODED REQUEST: ".$request."\n";
-		
-		$header = array(
-			'Content-Type: text/xml',
-			'Content-Length: '.strlen($request)
-		);
+        echo "ENCODED REQUEST: ".$request."\n";
 
-		$ch = curl_init();   
-		curl_setopt($ch, CURLOPT_URL, $this->apiUrl);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 1);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+        $header = array(
+            'Content-Type: text/xml',
+            'Content-Length: '.strlen($request)
+        );
 
-		$data = curl_exec($ch);       
-		if (curl_errno($ch)) {
-			throw new \Exception('curl error: '.curl_error($ch));
-		}
+        $ch = curl_init();   
+        curl_setopt($ch, CURLOPT_URL, $this->apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
 
-		curl_close($ch);
-		return xmlrpc_decode($data);
+        $data = curl_exec($ch);       
+        if (curl_errno($ch)) {
+            throw new \Exception('curl error: '.curl_error($ch));
+        }
+
+        curl_close($ch);
+        return xmlrpc_decode($data);
     }
-	
+
     /**
      * Logs in the user. Required before other API calls. anonymous logins are allowed
      */
@@ -82,16 +82,16 @@ class OpenSubtitles
     {
         if ($this->apiToken) {
             return true; // already logged in
-		}
+        }
 
         $res = $this->call(
             'LogIn',
             array(
-				$config->username,
-				$config->password,
-				$config->language,
-				$config->userAgent,
-			)
+                $config->username,
+                $config->password,
+                $config->language,
+                $config->userAgent,
+            )
         );
 
         if ($res['status'] != '200 OK') {
@@ -105,15 +105,16 @@ class OpenSubtitles
 
     private function logout()
     {
-        if (!$this->apiToken)
+        if (!$this->apiToken) {
             return false;
+        }
 
         $res = $this->call('LogOut', array($this->apiToken));
-        if ($res['status'] != '200 OK')
+        if ($res['status'] != '200 OK') {
             throw new \Exception('Logout failed');
-		
-		$this->apiToken = null;
+        }
 
+        $this->apiToken = null;
         return true;
     }
 
@@ -135,7 +136,7 @@ d($query);
 d($res);
     }
 */
-	
+
     private function createQueryItem($file)
     {
         if (!file_exists($file))
@@ -148,9 +149,9 @@ d($res);
         return $i;
     }
 
-	/**
-	 * Returns all matches to a file name
-	 */
+    /**
+     * Returns all matches to a file name
+     */
     public function findAllMatches($videoFile)
     {
         $id = $this->SearchByFile($videoFile);
@@ -160,7 +161,7 @@ d($res);
         }
 
         $data = $this->DownloadSubtitles(array($id));
-		return $data;
+        return $data;
 /*
         if (is_subtitle_srt($data))
             $subFile = file_set_suffix($videoFile, '.srt');
@@ -192,7 +193,7 @@ d($res);
 
     //XXX extend function to return all subs that was queried
     private function DownloadSubtitles( $arr = array() )
-    {		 
+    {
         $res = $this->call('DownloadSubtitles', array($this->apiToken, $arr));
         if ($res['status'] != '200 OK') {
             d($res);
@@ -214,36 +215,34 @@ d($res);
      */
     public function SearchByFileHash(\Client\OpenSubtitlesConfig $config, $fileName)
     {
-		$this->login($config);
-		
-		$fileHash = \Reader\VideoHash::calculateFromFile($fileName);
-		$fileSize = filesize($fileName);
+        $this->login($config);
+
+        $fileHash = \Reader\VideoHash::calculateFromFile($fileName);
+        $fileSize = filesize($fileName);
 
         $query = array(
-			$this->apiToken,
-			array(
-				'sublanguageid' => $config->language,
-				'moviehash' => $fileHash,
-				'moviebytesize' => $fileSize,
-				//'imdbid' => $imdbid
-			)
-		);
+            $this->apiToken,
+            array(
+                'sublanguageid' => $config->language,
+                'moviehash' => $fileHash,
+                'moviebytesize' => $fileSize,
+                //'imdbid' => $imdbid
+            )
+        );
 
         $res = $this->call('SearchSubtitles', $query);
 
         if (!$res) {
-			throw new \Exception('data error - empty result 1');
+            throw new \Exception('data error - empty result 1');
         }
 
         if (!$res['data']) {
             throw new \Exception('data error - empty result 2');
-		}
-		
-		return $res;
+        }
+
+        return $res;
 /*
         $base = file_set_suffix(basename($filename), '');
-		
-		
 
 // d($res);
 
@@ -278,8 +277,12 @@ d($res);
 
             // if file name contains "dvd" then see if release nfo contains "dvd"
             if (stripos($filename, 'dvd') !== false)
-                if (stripos($res['data'][$i]['SubFileName'], 'dvd') !== false || stripos($res['data'][$i]['SubAuthorComment'], 'dvd') !== false || stripos($res['data'][$i]['MovieReleaseName'], 'dvd') !== false )
+                if (stripos($res['data'][$i]['SubFileName'], 'dvd') !== false ||
+                    stripos($res['data'][$i]['SubAuthorComment'], 'dvd') !== false ||
+                    stripos($res['data'][$i]['MovieReleaseName'], 'dvd') !== false
+                ) {
                     $score[$id]++;
+                }
 
             // if SubFormat = "sub", downgrade since we dont have a parser for these
             if ($res['data'][$i]['SubFormat'] == 'sub')
@@ -303,7 +306,8 @@ d($res);
             d($res['data']);
         }
 
-        echo "[selected] http://www.opensubtitles.org/en/download/file/".$bestId.".gz (score ".$bestScore.", of ".count($res['data'])." matches)\n";
+        echo "[selected] http://www.opensubtitles.org/en/download/file/".$bestId.".gz ";
+        echo "(score ".$bestScore.", of ".count($res['data'])." matches)\n";
 
         return $bestId;
  */

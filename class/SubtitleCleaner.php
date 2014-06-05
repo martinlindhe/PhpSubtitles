@@ -85,8 +85,7 @@ class SubtitleCleaner
                 }
 */
                 foreach ($strings as $s) {
-                    $utf8s = utf8_encode($cap->text[$i]);
-                    if (mb_stripos($utf8s, $s) !== false) {
+                    if (mb_stripos(utf8_encode($cap->text[$i]), $s) !== false) {
                         echo 'Removed cap '.$cap->seq.": ";
 
                         foreach ($cap->text as $t) {

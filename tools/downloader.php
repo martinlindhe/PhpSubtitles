@@ -23,17 +23,17 @@ $fetcher = new \Client\OpenSubtitles();
 
 $items = array();
 
-foreach ($files as $vid_file) {
-    echo "[search] ".basename($vid_file)."\n";
+foreach ($files as $vidFile) {
+    echo "[search] ".basename($vidFile)."\n";
 
-    if ($fetcher->fetch($vid_file) && count($files) > 1) {
+    if ($fetcher->fetch($vidFile) && count($files) > 1) {
         $delay = 100000; //0.1 sec
         echo "[sleep] ".($delay / 1000000)." s\n\n";
         usleep($delay);
     }
 
 
-//    $items[] = $fetcher->createQueryItem($vid_file);
+//    $items[] = $fetcher->createQueryItem($vidFile);
 }
 
 //$fetcher->fetchAll($items);

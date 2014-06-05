@@ -4,13 +4,13 @@
  */
 class AssTest extends \PHPUnit_Framework_TestCase
 {
-	function testParse()
-	{
-		$reader = new \Reader\Subtitle\Ass();
-		
-		$this->markTestIncomplete('TODO implement');
-	}
-	
+    function testParse()
+    {
+        $reader = new \Reader\Subtitle\Ass();
+
+        $this->markTestIncomplete('TODO implement');
+    }
+
     function testStripTags()
     {
         $this->assertEquals(

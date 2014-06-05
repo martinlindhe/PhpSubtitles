@@ -10,9 +10,9 @@ require_once('config.php');
 if (count($argv) < 2)
     die("Usage: ".$argv[0]." path or filename\n");
 
-$in_cmd = $argv[1];
+$inCmd = $argv[1];
 
-$files = expand_arg_files($in_cmd, array('*.srt', '*.ass'));
+$files = expand_arg_files($inCmd, array('*.srt', '*.ass'));
 // d($files);
 
 foreach ($files as $f) {
@@ -25,8 +25,8 @@ foreach ($files as $f) {
     //die('XXXX');
     }
 
-    $out_file = no_suffix($f).'.srt';
+    $outFile = no_suffix($f).'.srt';
 
-    $cleaner->write($out_file, 'srt');
-    echo "Wrote subtitle to ".$out_file."\n";
+    $cleaner->write($outFile, 'srt');
+    echo "Wrote subtitle to ".$outFile."\n";
 }
