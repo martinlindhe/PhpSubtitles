@@ -1,0 +1,5 @@
+composer.phar
+composer.lock
+coverage-report-html
+vendor
+settings.php
