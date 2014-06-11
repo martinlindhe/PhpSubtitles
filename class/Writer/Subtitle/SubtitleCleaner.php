@@ -1,5 +1,5 @@
 <?php
-namespace cd;
+namespace Writer\Subtitle;
 
 //TODO: autodetect language (eng,swe) before correcting spelling etc
 //TODO: autodetect input CP1252 (windows-1252) and convert to utf-8, see test-subs/win1252.*.srt
@@ -7,34 +7,16 @@ namespace cd;
 class SubtitleCleaner
 {
     private $parser;                 ///< sub parser object
-    var     $cleanedCaps = array(); ///< cleaned up caps
+    var     $cleanedCaps = array();  ///< cleaned up caps
     var     $changes      = 0;       ///< number of changes performed
-
-    function __construct($data = '')
-    {
-        $this->setData($data);
-    }
-
-    function setData($in)
-    {
-        if (strlen($in) < 1000 && file_exists($in))
-            $in = file_get_contents($in);
-
-        if (is_subtitle_srt($in))
-            $this->parser = new SubtitleReaderSrt($in);
-        else if (is_subtitle_ass($in))
-            $this->parser = new SubtitleReaderAss($in);
-        else
-            throw new \Exception('unrecognized subtitle format '.substr($in, 0, 200));
-    }
 
     /**
      * Removes crap from subs
      *
-     * @param $strings array of strings to remove
+     * @param $caps array of \Reader\SubtitleCaption
      * @return true if sub was changed
      */
-    function cleanup()
+    public function cleanupCaptions(array $caps)
     {
         $strings = array(
         // eng subs:
@@ -60,8 +42,9 @@ class SubtitleCleaner
         'mediatextgruppen', 'texter på nätet',
         );
 
+        $cleanedCaps = array();
         $changes = 0;
-        foreach ($this->parser->caps as $cap) {
+        foreach ($caps as $cap) {
             $skip = false;
             for ($i = 0; $i < count($cap->text); $i++) {
 /*
@@ -104,7 +87,7 @@ class SubtitleCleaner
 
                     echo 'Changed cap '.$cap->seq.': ?. -> ? in "'.$cap->text[$i]."\"\n";
                     $skip = true;
-                    $this->changes++;
+                    $changes++;
                 }
 
                 if ($skip)
@@ -114,41 +97,10 @@ class SubtitleCleaner
             if ($skip)
                 continue;
 
-            $this->cleanedCaps[] = $cap;
+            $cleanedCaps[] = $cap;
         }
 
-        if (!$this->changes)
-            return false;
-
-        return true;
-    }
-
-    function render($format = '')
-    {
-        switch ($format)
-        {
-        case 'ass':
-            $writer = new SubtitleWriterAss($this->cleanedCaps);
-            break;
-        case 'srt':
-            $writer = new SubtitleWriterSrt($this->cleanedCaps);
-            break;
-
-        default:
-            if ($this->parser instanceof SubtitleReaderSrt)
-                $writer = new SubtitleWriterSrt($this->cleanedCaps);
-            else if ($this->parser instanceof SubtitleReaderAss)
-                $writer = new SubtitleWriterAss($this->cleanedCaps);
-            else
-                throw new \Exception('writer missing');
-        }
-
-        return $writer->render();
-    }
-
-    function write($filename, $format = '')
-    {
-//        echo "Writing ".$filename."\n";
-        file_put_contents($filename, $this->render($format));
+        $this->changes = $changes;
+        return $cleanedCaps;
     }
 }

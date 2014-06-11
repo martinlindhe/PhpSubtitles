@@ -1,6 +1,14 @@
 <?php
 namespace Writer;
 
+interface SubWriter
+{
+    /**
+     * @param array $caps array of \Reader\SubtitleCaption
+     */
+    function renderLocal(array $caps);
+}
+
 class Subtitle
 {
     var $caps;
@@ -18,22 +26,15 @@ class Subtitle
         $this->caps = $caps;
     }
 
-    public function write($filename)
+    /**
+     * Renders captions using specified subtitle writer
+     *
+     * @param array $caps array of \Reader\SubtitleCaption
+     * @param \Writer\Subtitle $sub Subtitle writer class
+     * @return string
+     */
+    public static function render(array $caps, \Writer\Subtitle $sub)
     {
-        file_put_contents($filename, $this->render());
+        return $sub->renderLocal($caps);
     }
-    
-    public function factory($format)
-    {
-        if ($format == 'srt') {
-            return new \Writer\Subtitle\Srt();
-        }
-        if ($format == 'ass') {
-            return new \Writer\Subtitle\Ass();
-        }
-        
-        throw new \Exception('unknown '.$format);
-    }
-
-    abstract function render();
 }

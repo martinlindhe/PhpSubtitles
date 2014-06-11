@@ -1,9 +1,9 @@
 <?php
 namespace Writer\Subtitle;
 
-class Ass extends \Writer\Subtitle
+class Ass extends \Writer\Subtitle implements \Writer\SubWriter
 {
-    public function render(\Writer\Subtitle $sub)
+    public function renderLocal(array $caps)
     {
         $lf = "\r\n";
 
@@ -29,7 +29,7 @@ class Ass extends \Writer\Subtitle
         '[Events]'.$lf.
         'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text'.$lf;
 
-        foreach ($sub->caps as $cap) {
+        foreach ($caps as $cap) {
             $res .=
             'Dialogue: 0,'.
             seconds_to_hms($cap->startTime, true).

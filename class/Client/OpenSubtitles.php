@@ -66,7 +66,11 @@ class OpenSubtitles
         curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
 
-        $data = curl_exec($ch);       
+        $data = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if ($httpCode != 200) {
+            throw new \Exception('http status code '.$httpCode.', curl error: '.curl_error($ch));
+        }
         if (curl_errno($ch)) {
             throw new \Exception('curl error: '.curl_error($ch));
         }
@@ -237,6 +241,7 @@ d($res);
         }
 
         if (!$res['data']) {
+            var_dump($res);
             throw new \Exception('data error - empty result 2');
         }
 
