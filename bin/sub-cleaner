@@ -1,9 +1,10 @@
+#!/usr/bin/env php
 <?php
 /**
  * Parses a .srt (SubRip text) subtitle, cleans it up and writes it to disk
  */
 
-namespace cd;
+use cd;
 
 require_once('config.php');
 

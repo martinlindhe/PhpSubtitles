@@ -1,9 +1,10 @@
+#!/usr/bin/env php
 <?php
 /**
  * takes input directory and convert all subtitles to .srt
  */
 
-namespace cd;
+use cd;
 
 require_once('config.php');
 

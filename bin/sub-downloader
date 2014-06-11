@@ -1,9 +1,10 @@
+#!/usr/bin/env php
 <?php
 /**
  * Fetches subtitles for all video files in specified directory & cleans them up
  */
 
-namespace cd;
+use cd;
 
 require_once('config.php');
 

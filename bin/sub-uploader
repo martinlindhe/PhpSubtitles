@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 /**
  * Uploads one or more subs to opensubtitles.org database
