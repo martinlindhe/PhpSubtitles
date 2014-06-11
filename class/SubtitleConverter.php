@@ -2,6 +2,8 @@
 namespace cd;
 
 // TODO move into a function of Writer\Subtitle
+// XXX factory
+
 
 /**
  * Converts subtitles between different formats

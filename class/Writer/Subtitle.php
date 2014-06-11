@@ -5,12 +5,12 @@ class Subtitle
 {
     var $caps;
 
-    function __construct($caps = array())
+    public function __construct($caps = array())
     {
         $this->setCaps($caps);
     }
 
-    function setCaps($caps)
+    public function setCaps($caps)
     {
         if (!$caps)
             return;
@@ -18,9 +18,21 @@ class Subtitle
         $this->caps = $caps;
     }
 
-    function write($filename)
+    public function write($filename)
     {
         file_put_contents($filename, $this->render());
+    }
+    
+    public function factory($format)
+    {
+        if ($format == 'srt') {
+            return new \Writer\Subtitle\Srt();
+        }
+        if ($format == 'ass') {
+            return new \Writer\Subtitle\Ass();
+        }
+        
+        throw new \Exception('unknown '.$format);
     }
 
     abstract function render();
