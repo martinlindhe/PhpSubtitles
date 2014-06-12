@@ -1,20 +1,14 @@
 <?php
 namespace Writer\Subtitle;
 
-//TODO: autodetect language (eng,swe) before correcting spelling etc
-//TODO: autodetect input CP1252 (windows-1252) and convert to utf-8, see test-subs/win1252.*.srt
-
 class SubtitleCleaner
 {
-    private $parser;                 ///< sub parser object
     var     $cleanedCaps = array();  ///< cleaned up caps
-    var     $changes      = 0;       ///< number of changes performed
+    var     $changes     = 0;        ///< number of changes performed
 
     /**
-     * Removes crap from subs
-     *
      * @param $caps array of \Reader\SubtitleCaption
-     * @return true if sub was changed
+     * @return array of cleaned up caps
      */
     public function cleanupCaptions(array $caps)
     {
@@ -33,7 +27,7 @@ class SubtitleCleaner
         'napisy.org', '1000fr.com', 'opensubtitles.org', 'o p e n s u b t i t l e s',
         'sous-titres.eu', '300mbfilms.com',
         'thepiratebay',
-        'MKV Player', // "Tip for download: Open Subtitles MKV Player"
+        'MKV Player',
         // swe subs:
         'swedish subtitles',
         'undertexter.se','undertexter. se', 'swesub.nu', 'divxsweden.net',

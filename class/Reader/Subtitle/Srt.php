@@ -1,6 +1,8 @@
 <?php
 namespace Reader\Subtitle;
 
+//TODO: autodetect input CP1252 (windows-1252) and convert to utf-8, see test-subs/win1252.*.srt
+
 /**
  * SubRip subtitle reader (.srt)
  */
