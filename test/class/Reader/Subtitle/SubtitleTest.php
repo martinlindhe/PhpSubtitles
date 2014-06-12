@@ -20,6 +20,9 @@ class SubtitleTest extends \PHPUnit_Framework_TestCase
             "from all evil</i>\r\n".
             "\r\n";
         
+        // TODO: evaluate Ass render
+        $resAss = \Writer\Subtitle::render(array($cap), new \Writer\Subtitle\Ass());
+        
         $res = \Writer\Subtitle::render(array($cap), new \Writer\Subtitle\Srt());
         $this->assertEquals(
             $text,
