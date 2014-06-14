@@ -47,12 +47,11 @@ class SrtTest extends \PHPUnit_Framework_TestCase
 
     function testParseWrongSequence()
     {
-        // NOTE sequence numbering starts at 1,
         // make sure we generate proper sequence on broken input
         $reader = new \Reader\Subtitle\Srt();
 
         $text =
-            "0\n".
+            "0\n". // NOTE invalid sequence numbering, should start at 1
             "00:00:04,630 --> 00:00:06,018\n".
             "<i>♪ Go ninja! ♪</i>\n";
 

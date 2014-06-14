@@ -2,8 +2,6 @@
 
 fix tests, finish rewrite
 
-. in bootstrap, register commands to be available from cli,
-  like "php bootstrap.php download "Skins S02E02"
 
 
 

@@ -88,7 +88,7 @@ class Ass extends \Writer\Subtitle implements \Writer\SubWriter
         $ex = explode('.', round($val, $precision));
 
         if (empty($ex[1]) || strlen($ex[1]) < $precision) {
-            $ex[1] = str_pad( !empty($ex[1]) ? $ex[1] : 0, $precision, '0');
+            $ex[1] = str_pad(!empty($ex[1]) ? $ex[1] : 0, $precision, '0');
         }
 
         return implode('.', $ex);
