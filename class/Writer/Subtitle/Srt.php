@@ -30,7 +30,7 @@ class Srt extends \Writer\Subtitle implements \Writer\SubWriter
     public function renderDuration($secs)
     {        
         if (!is_numeric($secs)) {
-            throw new \Exception ('bad input');
+            throw new \InvalidArgumentException();
         }
 
         if (!$secs) {
@@ -64,13 +64,13 @@ class Srt extends \Writer\Subtitle implements \Writer\SubWriter
     private function roundExact($val, $precision)
     {
         if (!is_numeric($val)) {
-            throw new \Exception('not numeric');
+            throw new \InvalidArgumentException();
         }
             
         $ex = explode('.', round($val, $precision));
 
         if (empty($ex[1]) || strlen($ex[1]) < $precision) {
-            $ex[1] = str_pad( !empty($ex[1]) ? $ex[1] : 0, $precision, '0');
+            $ex[1] = str_pad(!empty($ex[1]) ? $ex[1] : 0, $precision, '0');
         }
 
         return implode('.', $ex);

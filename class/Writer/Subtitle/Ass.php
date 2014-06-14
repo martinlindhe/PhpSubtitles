@@ -55,7 +55,7 @@ class Ass extends \Writer\Subtitle implements \Writer\SubWriter
     public function renderDuration($secs)
     {
         if (!is_numeric($secs)) {
-            throw new \Exception ('bad input');
+            throw new \InvalidArgumentException();
         }
 
         if (!$secs) {

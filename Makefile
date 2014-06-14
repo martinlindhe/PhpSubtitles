@@ -11,5 +11,5 @@ test:
 	./vendor/bin/phpunit
 
 lint:
-	./vendor/bin/phpcs --standard=test/phpcs-ruleset.xml class test tools
+	./vendor/bin/phpcs --standard=test/phpcs-ruleset.xml bin class test
 
